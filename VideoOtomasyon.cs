@@ -546,7 +546,7 @@ namespace VideoOtomasyon
            
             komut.Parameters.Add("@VAd", NpgsqlTypes.NpgsqlDbType.Text, 100).Value = "%" + AnasayfaListeAramaTextBox.Text + "%";
             rdr = komut.ExecuteReader();
-            //Stored Procedure Kullanılarak yapılmıştır.
+            //Function Kullanılarak yapılmıştır.
             while (rdr.Read())
             {
                 list_Videolar.Items.Add(rdr["AnasayfaListeYenile"]);
@@ -559,22 +559,23 @@ namespace VideoOtomasyon
 
         private void ProfilListeAramaTextBox_TextChanged(object sender, EventArgs e)
         {
-            /*
+            
             list_Videolarim.Items.Clear();
-            //Stored Procedure Kullanılarak yapılmıştır.
-            komut = new NpgsqlCommand("Call \"ProfilListeYenile\" (:_kk,:_otrm)", baglanti);
-
-            komut.Parameters.Add("_otrm", NpgsqlTypes.NpgsqlDbType.Text).NpgsqlValue = lbl_Kullanici.Text;
-            komut.Parameters.Add("_kk", NpgsqlTypes.NpgsqlDbType.Text).NpgsqlValue = "%"+ProfilListeAramaTextBox.Text+"%";
+            //Function Kullanılarak yapılmıştır.
+            komut = new NpgsqlCommand("Select * from profillisteyenile(@viad)", baglanti);
+            komut.Parameters.Add("@viad", NpgsqlTypes.NpgsqlDbType.Text).NpgsqlValue = "%"+ProfilListeAramaTextBox.Text+"%";
             komut.CommandType = CommandType.Text;
             baglanti.Open();
             rdr = komut.ExecuteReader();
+            
                 while (rdr.Read())
                 {
-                list_Videolarim.Items.Add(rdr["_otrm"]);
+                if (rdr["Ad"].ToString() == lbl_Kullanici.Text)
+                
+                    list_Videolarim.Items.Add(rdr["VideoAdı"]);
                 }
                 baglanti.Close();
-            */
+
             
         }
 
