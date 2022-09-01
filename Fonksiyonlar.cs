@@ -1,5 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -73,7 +75,7 @@ namespace VideoOtomasyon
                 a[i] = grit.Rows[i].Cells[0].Value.ToString();
 
                 cmd = new NpgsqlCommand();
-                cmd.Parameters.AddWithValue(Gparam, a[i]);
+                cmd.Parameters.AddWithValue(Gparam, Convert.ToInt32(a[i]));
                 con.Open();
                 cmd.Connection = con;
                 cmd.CommandText = güncellenecekSorgu;
@@ -107,7 +109,7 @@ namespace VideoOtomasyon
                 a[i] = grit.Rows[i].Cells[güncellenecekSütün].Value.ToString();
 
                 cmd = new NpgsqlCommand();
-                cmd.Parameters.AddWithValue(Gparam, a[i]);
+                cmd.Parameters.AddWithValue(Gparam, Convert.ToInt32(a[i]));
                 con.Open();
                 cmd.Connection = con;
                 cmd.CommandText = güncellenecekSorgu;
@@ -134,7 +136,7 @@ namespace VideoOtomasyon
                 a[i] = grit.Rows[i].Cells[güncellenecekSütün].Value.ToString();
 
                 cmd = new NpgsqlCommand();
-                cmd.Parameters.AddWithValue(Gparam, a[i]);
+                cmd.Parameters.AddWithValue(Gparam, Convert.ToInt32(a[i]));
                 con.Open();
                 cmd.Connection = con;
                 cmd.CommandText = güncellenecekSorgu;
@@ -198,7 +200,10 @@ namespace VideoOtomasyon
             cmd = new NpgsqlCommand();
             con = new NpgsqlConnection(connectionString);
             cmd.Connection = con;
-            cmd.Parameters.AddWithValue(SyParam, SyKosul);
+            if (SyKosul.All(c => char.IsDigit(c)))
+                cmd.Parameters.AddWithValue(SyParam, Convert.ToInt32(SyKosul));
+            else
+                cmd.Parameters.AddWithValue(SyParam, SyKosul);
             con.Open();
 
             cmd.CommandText = SyKomut;
@@ -219,7 +224,7 @@ namespace VideoOtomasyon
             con = new NpgsqlConnection(connectionString);
             con.Open();
             cmd.Connection = con;
-            cmd.CommandText = "Select AdminYetkisi from Oturum where Ad='" + VideoOtomasyon.KullanıcıADıSession + "'";
+            cmd.CommandText = "Select AdminYetkisi from Oturum where Ad='" + VideoOtomasyon.KullanıcınınAdı + "'";
             rdr = cmd.ExecuteReader();
             if (rdr.Read())
             {

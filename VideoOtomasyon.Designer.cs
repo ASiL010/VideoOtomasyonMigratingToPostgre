@@ -74,6 +74,7 @@ namespace VideoOtomasyon
             this.Kanal_Istatistik = new System.Windows.Forms.DataGridView();
             this.list_Videolarim = new System.Windows.Forms.ListBox();
             this.pnl_Giris = new System.Windows.Forms.Panel();
+            this.label5 = new System.Windows.Forms.Label();
             this.sifreGöster2 = new System.Windows.Forms.CheckBox();
             this.sifreGöster1 = new System.Windows.Forms.CheckBox();
             this.btn_GirisYap = new System.Windows.Forms.Button();
@@ -94,7 +95,6 @@ namespace VideoOtomasyon
             this.aboneolankanal = new System.Windows.Forms.DataGridView();
             this.aboneolgmkanal = new System.Windows.Forms.DataGridView();
             this.btn_AdmineGit = new System.Windows.Forms.Button();
-            this.label5 = new System.Windows.Forms.Label();
             this.pnl_Anasayfa.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.wmp)).BeginInit();
             this.pnl_Profil.SuspendLayout();
@@ -532,6 +532,16 @@ namespace VideoOtomasyon
             this.pnl_Giris.Name = "pnl_Giris";
             this.pnl_Giris.Size = new System.Drawing.Size(1215, 591);
             this.pnl_Giris.TabIndex = 7;
+            this.pnl_Giris.Paint += new System.Windows.Forms.PaintEventHandler(this.pnl_Giris_Paint);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(833, 533);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(347, 16);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Tester İçin Adminin Kullanıcı Adı ve Şifresi ADMİN 1234Aa";
             // 
             // sifreGöster2
             // 
@@ -734,15 +744,6 @@ namespace VideoOtomasyon
             this.btn_AdmineGit.UseVisualStyleBackColor = true;
             this.btn_AdmineGit.Visible = false;
             this.btn_AdmineGit.Click += new System.EventHandler(this.btn_AdmineGit_Click);
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(833, 533);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(347, 16);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Tester İçin Adminin Kullanıcı Adı ve Şifresi ADMİN 1234Aa";
             // 
             // VideoOtomasyon
             // 

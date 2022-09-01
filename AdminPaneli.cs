@@ -383,7 +383,7 @@ namespace VideoOtomasyon
         private void button7_Click(object sender, EventArgs e)
         {
 
-            SQLQuery("Insert into Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + VideoIDsi.Text + "', '" + VideoOtomasyon.KullanıcıIDsiSession + "', '" + Yorumİçeriği.Text + "'" + ",NOW())");
+            SQLQuery("Insert into Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + VideoIDsi.Text + "', '" + VideoOtomasyon.izleyenkisiid + "', '" + Yorumİçeriği.Text + "'" + ",NOW())");
             MessageBox.Show("Yorum Başarı ile Yapıldı");
             VideoAdıDeğiştir.Clear();
             DataBindingYenileYorumlar();

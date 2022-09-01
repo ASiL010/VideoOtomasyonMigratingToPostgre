@@ -47,14 +47,14 @@ namespace VideoOtomasyon
             pnl_Anasayfa.Visible = false;
             pnl_Profil.Visible = false;
             pnl_abonelikler.Visible = true;
-            VideoİzleyeniBelirle();
+           // VideoİzleyeniBelirle();
 
-            Fonksiyonlar.DataGridRowGüncelle(aboneolgmkanal, "select SahibiID,AboneOlmaTarihi,VideoAdı,VideoTarihi from Abonelikler  Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID   where KimAboneID='" + izleyenkisiid + "'", "Select Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id inner join Abonelikler on Abonelikler.KimAboneID=Oturum.id where KimAboneID=@k", "@k");
+            Fonksiyonlar.DataGridRowGüncelle(aboneolgmkanal, "select SahibiID,AboneOlmaTarihi,VideoAdı,VideoTarihi from Abonelikler  Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID   where KimAboneID= "+ izleyenkisiid,"Select Oturum.Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id inner join Abonelikler on Abonelikler.KimAboneID=Oturum.id where KimAboneID=@k", "@k");
             aboneolgmkanal.Columns[0].HeaderText = "Abone Olduğunuz Kanalın İsmi";
             aboneolgmkanal.Columns[1].HeaderText = "Abone Olduğunuz Tarih";
             aboneolgmkanal.Columns[2].HeaderText = "Abone Olduğunuz Videosu";
             aboneolgmkanal.Columns[3].HeaderText = "Videonun Paylaşılma Tarihi";
-            Fonksiyonlar.DataGridRowGüncelle(aboneolankanal, "select KimAboneID,AboneOlmaTarihi,VideoAdı,VideoTarihi from Abonelikler Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID   where KimeAboneID='" + izleyenkisiid + "'", "Select Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id inner join Abonelikler on Abonelikler.KimAboneID=Oturum.id where KimAboneID=@k", "@k");
+            Fonksiyonlar.DataGridRowGüncelle(aboneolankanal, "select KimAboneID,AboneOlmaTarihi,VideoAdı,VideoTarihi from Abonelikler Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID   where KimeAboneID=" + izleyenkisiid, "Select Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id inner join Abonelikler on Abonelikler.KimAboneID=Oturum.id where KimAboneID=@k", "@k");
             aboneolankanal.Columns[0].HeaderText = "Abone Olan Kanalın İsmi";
             aboneolankanal.Columns[1].HeaderText = "Size Abone Olduğu Tarih";
             aboneolankanal.Columns[2].HeaderText = "Videonuzun İsmi";
@@ -121,8 +121,8 @@ namespace VideoOtomasyon
             }
 
         }
-        public static string KullanıcıIDsiSession = "";
-        public static string KullanıcıADıSession = "";
+        public static string VideonunID = null, VideoSahibiID = null, izleyenkisiid = null, KullanıcınınAdı=null;
+
         private void btn_GirisYap_Click(object sender, EventArgs e)
         {
             if (
@@ -135,8 +135,8 @@ namespace VideoOtomasyon
                     SQLQuery("select id,Ad from Oturum WHERE Ad = '" + txt_Kullanici2.Text + "' AND Sifre = '" + Fonksiyonlar.md5ilesifrele(txt_Sifre2.Text) + "'");
                     if (rdr.Read())//sqli okursa kullanıcı ve şifresi doğrudur
                     {
-                        KullanıcıIDsiSession = rdr["id"].ToString();
-                        KullanıcıADıSession = rdr["Ad"].ToString();
+                        izleyenkisiid = rdr["id"].ToString();
+                        KullanıcınınAdı = rdr["Ad"].ToString();
                         MessageBox.Show("Giriş Başarılı");
                         lbl_Kullanici.Text = rdr["Ad"].ToString();
 
@@ -185,7 +185,7 @@ namespace VideoOtomasyon
         {
             MessageBox.Show("Bu media Çalınamaz.");
         }
-        string VideonunID = null, VideoSahibiID = null, izleyenkisiid = null;
+      
         private void listIndexDegisti(object sender, EventArgs e)
         {
             if (list_Videolar.SelectedIndex > -1)
@@ -289,7 +289,7 @@ namespace VideoOtomasyon
 
 
                                     baglanti.Close();
-                                    SQLQuery("insert into Videolar (VideoAdı,VideoPath,SahibiID,PaylasildiDurum,VideoTarihi) values ('" + Video_Adi.Text + "', '" + destFile + "', '" + KullanıcıIDsiSession + "', '" + "FALSE" + "'" + ",NOW() )");
+                                    SQLQuery("insert into Videolar (VideoAdı,VideoPath,SahibiID,PaylasildiDurum,VideoTarihi) values ('" + Video_Adi.Text + "', '" + destFile + "', '" + izleyenkisiid + "', '" + "FALSE" + "'" + ",NOW() )");
                                     baglanti.Close();
                                     string a = null;
                                     paramatrelidata("select ID from Videolar Where VideoAdı=@0", new[] { Video_Adi.Text });
@@ -588,14 +588,6 @@ namespace VideoOtomasyon
 
         private void VideoİzleyeniBelirle()
         {
-            paramatrelidata("select id from Oturum  where Ad=@0", new[] { lbl_Kullanici.Text });
-            if (rdr.Read())
-            {
-                izleyenkisiid = rdr["id"].ToString();
-
-            }
-            baglanti.Close();
-
             paramatrelidata("select Oturum.id,Videolar.ID,SahibiID,Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id where VideoAdı=@0", new[] { list_Videolar.Text });
             if (rdr.Read())
             {
@@ -711,9 +703,10 @@ namespace VideoOtomasyon
             rdr = komut.ExecuteReader();
         }
 
+        private void pnl_Giris_Paint(object sender, PaintEventArgs e)
+        {
 
-
-
+        }
 
         public void SQLQuery(string s)
         {

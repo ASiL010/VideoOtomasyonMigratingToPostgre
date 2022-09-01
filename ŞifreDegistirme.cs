@@ -29,7 +29,7 @@ namespace VideoOtomasyon
             KapçaOluştur(Kapça);
 
 
-            SifreDegistirenKullanıcı.Text = VideoOtomasyon.KullanıcıADıSession;
+            SifreDegistirenKullanıcı.Text = VideoOtomasyon.izleyenkisiid;
         }
         public int birkereSifreDegistireGit = 0;
         private void şifreFormKapat(object sender, KeyEventArgs e)
@@ -73,7 +73,7 @@ namespace VideoOtomasyon
             if (Fonksiyonlar.injectiondanKoru(yeniSifre1.Text) && Fonksiyonlar.injectiondanKoru(yeniSifre2.Text)
               && Fonksiyonlar.injectiondanKoru(eskiSifre.Text) && Fonksiyonlar.injectiondanKoru(kapcaEnter.Text))
             {
-                SQLQuery("Select Sifre from Oturum where Ad='" + VideoOtomasyon.KullanıcıADıSession + "'");
+                SQLQuery("Select Sifre from Oturum where Ad='" + VideoOtomasyon.KullanıcınınAdı + "'");
                 if (rdr.Read())
                 {
                     if (Fonksiyonlar.md5ilesifrele(eskiSifre.Text) == rdr[0].ToString())
@@ -86,7 +86,7 @@ namespace VideoOtomasyon
                                 if (yeniSifre1.Text == yeniSifre2.Text)
                                 {
                                     baglanti.Close();
-                                    SQLQuery2Parametreli("Update Oturum Set Sifre=@s where Ad=@a", "@s", "@a", Fonksiyonlar.md5ilesifrele(yeniSifre1.Text), VideoOtomasyon.KullanıcıADıSession);
+                                    SQLQuery2Parametreli("Update Oturum Set Sifre=@s where Ad=@a", "@s", "@a", Fonksiyonlar.md5ilesifrele(yeniSifre1.Text), VideoOtomasyon.izleyenkisiid);
                                     MessageBox.Show("Şifreniz Başarı ile Değiştirilmiştir");
                                     yeniSifre1.Clear();
                                     yeniSifre2.Clear();
