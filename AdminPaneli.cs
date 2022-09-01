@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
@@ -9,12 +10,12 @@ namespace VideoOtomasyon
 
     public partial class AdminPaneli : Form
     {
-        static public string connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=OguzDTO;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        static SqlConnection con = new SqlConnection();
-        static SqlCommand cmd = new SqlCommand();
-        static SqlDataAdapter da;
+        static public string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
+        static NpgsqlConnection con = new NpgsqlConnection();
+        static NpgsqlCommand cmd = new NpgsqlCommand();
+        static NpgsqlDataAdapter da;
         static DataSet ds;
-        static SqlDataReader rdr;
+        static NpgsqlDataReader rdr;
 
 
         public AdminPaneli()
@@ -101,7 +102,7 @@ namespace VideoOtomasyon
 
         private void SQLQuery(string s)
         {
-            cmd = new SqlCommand();
+            cmd = new NpgsqlCommand();
             con.Open();
             cmd.Connection = con;
             cmd.CommandText = s;
@@ -112,7 +113,7 @@ namespace VideoOtomasyon
         private void SQLQuery2Parametreli(string s, string p1, string p2, string d1, string d2)
         {
 
-            cmd = new SqlCommand();
+            cmd = new NpgsqlCommand();
             cmd.Parameters.AddWithValue(p1, d1);
             cmd.Parameters.AddWithValue(p2, d2);
             con.Open();
@@ -125,7 +126,7 @@ namespace VideoOtomasyon
         private void SQLQuery1Parametreli(string s, string p1, string d1)
         {
 
-            cmd = new SqlCommand();
+            cmd = new NpgsqlCommand();
             cmd.Parameters.AddWithValue(p1, d1);
             con.Open();
             cmd.Connection = con;
@@ -143,8 +144,8 @@ namespace VideoOtomasyon
             AdminOturumSifre.DataBindings.Clear();
             AdminOturumYetki.DataBindings.Clear();
 
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter("Select * from Oturum", con);
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter("Select * from Oturum", connectionString);
             ds = new DataSet();
             con.Open();
             da.Fill(ds);
@@ -299,9 +300,9 @@ namespace VideoOtomasyon
             YorumunTarihi.DataBindings.Clear();
             YorumIDsi.DataBindings.Clear();
             VideoIDsi.DataBindings.Clear();
-
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter("Select VideoID,Yorumlar.ID,Ad,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID where VideoAdı='" + AdminPanelYorumluVideolarListesi.Text + "'", con);
+       
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter("Select VideoID,Yorumlar.ID,Ad,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID where VideoAdı='" + AdminPanelYorumluVideolarListesi.Text + "'", con);
             ds = new DataSet();
             con.Open();
             da.Fill(ds);
@@ -382,7 +383,7 @@ namespace VideoOtomasyon
         private void button7_Click(object sender, EventArgs e)
         {
 
-            SQLQuery("Insert Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + VideoIDsi.Text + "', '" + VideoOtomasyon.KullanıcıIDsiSession + "', '" + Yorumİçeriği.Text + "'" + ",GETDATE())");
+            SQLQuery("Insert into Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + VideoIDsi.Text + "', '" + VideoOtomasyon.KullanıcıIDsiSession + "', '" + Yorumİçeriği.Text + "'" + ",NOW())");
             MessageBox.Show("Yorum Başarı ile Yapıldı");
             VideoAdıDeğiştir.Clear();
             DataBindingYenileYorumlar();

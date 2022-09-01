@@ -3,6 +3,9 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
+using Npgsql;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Linq;
 
 namespace VideoOtomasyon
 {
@@ -10,10 +13,10 @@ namespace VideoOtomasyon
     {
         //OguzDTO.mdf ve OguzDTO.ldf isimli olan dosyaları SQL servere attach yapmadan önce güvenlik ilkelerinden bu dosyalar için  bütün erişim izinlerinin alınması gerekmektedir.
         //Program derlenmeden önce VideoOtomasyon.cs , Fonksiyonlar.cs , AdminPaneli.cs , ŞifreDegistirme.cs dosyalarındaki "connectionString"-lerinin güncellenmesi gerekmektedir.
-        string connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=OguzDTO;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        SqlConnection baglanti = new SqlConnection();
-        SqlCommand komut = new SqlCommand();
-        SqlDataReader rdr;
+        string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
+        NpgsqlConnection baglanti = new NpgsqlConnection();
+        NpgsqlCommand komut = new NpgsqlCommand();
+        NpgsqlDataReader rdr;
 
         public VideoOtomasyon()
         {
@@ -91,7 +94,7 @@ namespace VideoOtomasyon
                         if (Fonksiyonlar.SifrelemeKuralları(txt_Sifre1.Text))
                         {
 
-                            SQLQuery1Parametreli("select id,Ad from Oturum WHERE Ad = @Adi", "@Adi", txt_Kullanici1.Text);
+                            paramatrelidata("select id,Ad from Oturum WHERE Ad = @0", new[] { txt_Kullanici1.Text });
 
                             if (rdr.Read())//sqli okursa kullanıcı ve şifresi doğrudur
                             {
@@ -101,7 +104,7 @@ namespace VideoOtomasyon
                             {
                                 string girissifresi = Fonksiyonlar.md5ilesifrele(txt_Sifre1.Text);
                                 baglanti.Close();
-                                SQLQuery("insert Oturum (Ad,Sifre,AdminYetkisi,SonGiris) values ('" + txt_Kullanici1.Text + "','" + girissifresi + "','" + 0 + "'" + ",GETDATE() )");
+                                SQLQuery("insert into Oturum (Ad,Sifre,AdminYetkisi,SonGiris) values ('" + txt_Kullanici1.Text + "','" + girissifresi + "','" + "False" + "'" + ",NOW() )");
                                 baglanti.Close();
                                 MessageBox.Show("Kullanıcı Başarıyla Kaydedildi.");
                             }
@@ -138,7 +141,7 @@ namespace VideoOtomasyon
                         lbl_Kullanici.Text = rdr["Ad"].ToString();
 
                         baglanti.Close();
-                        SQLQuery1Parametreli("UPDATE Oturum SET SonGiris=GETDATE() WHERE Ad=@kullanicininadi", "@kullanicininadi", txt_Kullanici2.Text);
+                        paramatrelidata("UPDATE Oturum SET SonGiris=NOW() WHERE Ad=@0", new[] { txt_Kullanici2.Text });
 
                         pnl_Giris.Visible = false;
 
@@ -200,7 +203,7 @@ namespace VideoOtomasyon
 
                 VideoİzleyeniBelirle();
 
-                SQLQuery1Parametreli("select id,Videolar.ID,SahibiID,Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id where VideoAdı=@videoadi", "@videoadi", list_Videolar.Text);
+                paramatrelidata("select Oturum.id,Videolar.ID,SahibiID,Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id where VideoAdı=@0", new[] { list_Videolar.Text });
                 if (rdr.Read())
                 {
                     //Hangi kanalın videosunun izlendiğinin gösterilmesi
@@ -209,13 +212,13 @@ namespace VideoOtomasyon
                     else Abone_ol_Btn.Enabled = true;
                     baglanti.Close();
 
-                    SQLQuery3Parametreli("select COUNT(*) from Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+                    paramatrelidata("select COUNT(*) from Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @0 and İzlenenenVideoID = @1 and İzleyenID = @2", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
                     if (rdr.Read())
                     {
                         if (rdr[0].ToString() == "0")
                         {
                             baglanti.Close();
-                            SQLQuery3Parametreli("insert Görüntülenmeler (İzleyenID,İzlenenenkisiID,İzlenenenVideoID,İzlenenTarih)  values(@kisi,@izlenenkisi,@video,GETDATE())", "@kisi", "@izlenenkisi", "@video", izleyenkisiid, VideoSahibiID, VideonunID);
+                            paramatrelidata("insert into Görüntülenmeler (İzleyenID,İzlenenenkisiID,İzlenenenVideoID,İzlenenTarih)  values (@0,@1,@2,NOW())", new[] { izleyenkisiid, VideoSahibiID, VideonunID });
                             baglanti.Close();
                         }
                     }
@@ -223,7 +226,7 @@ namespace VideoOtomasyon
                 }
                 baglanti.Close();
 
-                SQLQuery1Parametreli("select VideoPath,ID,VideoTarihi from Videolar Where VideoAdı=@videoadi", "@videoadi", list_Videolar.Text);
+                paramatrelidata("select VideoPath,ID,VideoTarihi from Videolar Where VideoAdı=@0", new[] { list_Videolar.Text });
 
                 if (rdr.Read())
                 {
@@ -259,7 +262,7 @@ namespace VideoOtomasyon
                         {
                             //aynı video olmasının önüne geçmek
 
-                            SQLQuery1Parametreli("select VideoAdı from Videolar where VideoAdı=@v", "@v", Video_Adi.Text);
+                            paramatrelidata("select VideoAdı from Videolar where VideoAdı=@0", new[] { Video_Adi.Text });
                             if (rdr.Read())
                             {
                                 MessageBox.Show("Sistemde aynı isimli video zaten var...");
@@ -286,20 +289,20 @@ namespace VideoOtomasyon
 
 
                                     baglanti.Close();
-                                    SQLQuery("insert Videolar (VideoAdı,VideoPath,SahibiID,PaylasildiDurum,VideoTarihi) values ('" + Video_Adi.Text + "', '" + destFile + "', '" + KullanıcıIDsiSession + "', '" + 0 + "'" + ",GETDATE() )");
+                                    SQLQuery("insert into Videolar (VideoAdı,VideoPath,SahibiID,PaylasildiDurum,VideoTarihi) values ('" + Video_Adi.Text + "', '" + destFile + "', '" + KullanıcıIDsiSession + "', '" + "FALSE" + "'" + ",NOW() )");
                                     baglanti.Close();
                                     string a = null;
-                                    SQLQuery1Parametreli("select ID from Videolar Where VideoAdı=@videoismi", "@videoismi", Video_Adi.Text);
+                                    paramatrelidata("select ID from Videolar Where VideoAdı=@0", new[] { Video_Adi.Text });
                                     if (rdr.Read()) { a = rdr["ID"].ToString(); }
                                     baglanti.Close();
 
                                     string[] paramlar = new string[] { "@id", "@gr", "@bgn", "@bgme", "@Yrm" };
                                     string[] degerler = new string[] { a, "0", "0", "0", "0" };
-                                    SQLQuery5Parametreli("insert Istatistik (VideoID,GoruntulenmeSayisi,BegenmeSayisi,BegenmemeSayisi,YorumSayisi) values (@id,@gr,@bgn,@bgme,@Yrm)", paramlar, degerler);
+                                    paramatrelidata("insert into Istatistik (VideoID,GoruntulenmeSayisi,BegenmeSayisi,BegenmemeSayisi,YorumSayisi) values (@0,@1,@2,@3,@4)", degerler);
                                     baglanti.Close();
 
                                     //temizlemeden yazma
-                                    SQLQuery("SELECT top 1 * FROM Videolar order by ID desc");
+                                    SQLQuery("SELECT * FROM Videolar order by ID desc fetch first 1 rows only");
                                     while (rdr.Read()) list_Videolarim.Items.Add(rdr["VideoAdı"]);
                                     baglanti.Close();
                                 }
@@ -312,7 +315,7 @@ namespace VideoOtomasyon
                     }
 
                 }
-                
+
             }
             else MessageBox.Show("Video İsmi uzunluğu 50'den fazla olamaz ");
 
@@ -351,7 +354,7 @@ namespace VideoOtomasyon
                                                    Fonksiyonlar.SayisiniGetir(" Select COUNT(Begenmeme) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = @v and Begenmeme = 'True' ", "@v", list_Videolarim.Items[i].ToString()),
                                                    Fonksiyonlar.SayisiniGetir(" Select COUNT(*) from Yorumlar inner join Videolar on Videolar.ID = Yorumlar.VideoID where VideoAdı = @v ", "@v", list_Videolarim.Items[i].ToString()),
                                                    list_Videolarim.Text };
-                SQLQuery5Parametreli("Update Istatistik Set GoruntulenmeSayisi=@GS,BegenmeSayisi=@BS,BegenmemeSayisi=@BMS,YorumSayisi=@YS from Istatistik inner join Videolar on Videolar.ID = Istatistik.VideoID where VideoAdı =@Vadi", paramlar, degerler);
+                paramatrelidata("Update Istatistik Set GoruntulenmeSayisi=@0,BegenmeSayisi=@1,BegenmemeSayisi=@2,YorumSayisi=@3 from Istatistik inner join Videolar on Videolar.ID = Istatistik.VideoID where VideoAdı =@4" ,degerler);
                 baglanti.Close();
                 SQLQuery("Select * from Istatistik inner join Videolar on Videolar.ID = Istatistik.VideoID where SahibiID ='" + VideoSahibiID + "'");
                 baglanti.Close();
@@ -377,7 +380,7 @@ namespace VideoOtomasyon
 
             if (list_Videolarim.SelectedIndex != -1)
             {
-                SQLQuery1Parametreli("UPDATE Videolar SET PaylasildiDurum = 1 WHERE VideoAdı =@benimvideom", "@benimvideom", list_Videolarim.Text);
+                paramatrelidata("UPDATE Videolar SET PaylasildiDurum = True WHERE VideoAdı =@0", new[] { list_Videolarim.Text });
                 baglanti.Close();
             }
             ListeleriYenile();
@@ -387,7 +390,7 @@ namespace VideoOtomasyon
         {
             if (list_Videolarim.SelectedIndex != -1)
             {
-                SQLQuery1Parametreli("UPDATE Videolar SET PaylasildiDurum = 0 WHERE VideoAdı =@benimvideom", "@benimvideom", list_Videolarim.Text);
+                paramatrelidata("UPDATE Videolar SET PaylasildiDurum = False WHERE VideoAdı =@0", new[] { list_Videolarim.Text });
                 baglanti.Close();
             }
             ListeleriYenile();
@@ -398,13 +401,13 @@ namespace VideoOtomasyon
         private void YourumuYap(object sender, EventArgs e)
         {
             string a = "-1", b = null;
-            SQLQuery1Parametreli("Select ID,id From Oturum INNER join Videolar on Videolar.SahibiID = Oturum.id where  VideoAdı=@videoismi", "@videoismi", list_Videolar.Text);
+            paramatrelidata("Select ID,id From Oturum INNER join Videolar on Videolar.SahibiID = Oturum.id where  VideoAdı=@0", new[] { list_Videolar.Text });
             if (rdr.Read())
             {
                 b = (rdr["ID"].ToString());
             }
             baglanti.Close();
-            SQLQuery1Parametreli("select id from Oturum WHERE Ad = @kullaniciismi", "@kullaniciismi", lbl_Kullanici.Text);
+            paramatrelidata("select id from Oturum WHERE Ad = @0", new[] { lbl_Kullanici.Text });
             if (rdr.Read())
             {
                 a = rdr["id"].ToString();
@@ -413,7 +416,7 @@ namespace VideoOtomasyon
             if (
             Fonksiyonlar.injectiondanKoru(txt_Yorum.Text))
             {
-                SQLQuery("Insert Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + b + "', '" + a + "', '" + txt_Yorum.Text + "'" + ",GETDATE())");
+                SQLQuery("Insert into Yorumlar (VideoID,YorumSahipID,YorumIcerigi,YorumTarihi) values ('" + b + "', '" + a + "', '" + txt_Yorum.Text + "'" + ",NOW())");
                 baglanti.Close();
             }
 
@@ -426,7 +429,7 @@ namespace VideoOtomasyon
             if (Abone_ol_Btn.Text == "Abone ol")
             {
                 VideoİzleyeniBelirle();
-                SQLQuery3Parametreli("insert Abonelikler (KimAboneID,KimeAboneID,OlunanVideoID,AboneOlmaTarihi) values (@k,@i,@v,GETDATE() )", "@k", "@i", "@v", izleyenkisiid, VideoSahibiID, VideonunID);
+                paramatrelidata("insert into Abonelikler (KimAboneID,KimeAboneID,OlunanVideoID,AboneOlmaTarihi) values (@0,@1,@2,NOW() )", new[] { izleyenkisiid, VideoSahibiID, VideonunID });
                 //SQLQuery1Parametreli("UPDATE Istatistik set AboneSayisi=AboneSayisi+1 where VideoID=@videoİD" , "@videoİD", a );
                 baglanti.Close();
                 GörüntülenmeGöster();
@@ -435,7 +438,7 @@ namespace VideoOtomasyon
             else if (Abone_ol_Btn.Text == "Abone olundu")
             {
                 VideoİzleyeniBelirle();
-                SQLQuery2Parametreli("Delete Abonelikler from Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID inner join Oturum on Abonelikler.KimAboneID=Oturum.id where KimeAboneID = @i  and KimAboneID = @k", "@i", "@k", VideoSahibiID, izleyenkisiid);
+                paramatrelidata("Delete Abonelikler from Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID inner join Oturum on Abonelikler.KimAboneID=Oturum.id where KimeAboneID = @0  and KimAboneID = @1", new[] { VideoSahibiID, izleyenkisiid });
                 baglanti.Close();
                 GörüntülenmeGöster();
             }
@@ -445,7 +448,7 @@ namespace VideoOtomasyon
         private void Begenmeme_clicked(object sender, EventArgs e)
         {
             VideoİzleyeniBelirle();
-            SQLQuery2Parametreli("Select Begenmeme from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID=Videolar.ID inner join Oturum on Oturum.id=Görüntülenmeler.İzleyenID  WHERE VideoAdı =@v and Ad=@o ", "@v", "@o", list_Videolar.Text, lbl_Kullanici.Text);
+            paramatrelidata("Select Begenmeme from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID=Videolar.ID inner join Oturum on Oturum.id=Görüntülenmeler.İzleyenID  WHERE VideoAdı ='@0' and Ad='@1' ", new[] { list_Videolar.Text, lbl_Kullanici.Text });
             if (rdr.Read())
             {
 
@@ -453,7 +456,7 @@ namespace VideoOtomasyon
                 {
                     baglanti.Close();
                     //BegenmelerNullKaldır();
-                    SQLQuery3Parametreli("UPDATE Görüntülenmeler  set Begenmeme='true' from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+                    paramatrelidata("UPDATE Görüntülenmeler  set Begenmeme='true' from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = '@0' and İzlenenenVideoID = '@1' and İzleyenID = '@2'", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
                     baglanti.Close();
 
                     GörüntülenmeGöster();
@@ -462,7 +465,7 @@ namespace VideoOtomasyon
                 {
                     baglanti.Close();
                     // BegenmelerNullKaldır();
-                    SQLQuery3Parametreli("UPDATE Görüntülenmeler  set Begenmeme='False' from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+                    paramatrelidata("UPDATE Görüntülenmeler  set Begenmeme='False' from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = '@0' and İzlenenenVideoID = '@1' and İzleyenID = @2", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
                     baglanti.Close();
 
                     GörüntülenmeGöster();
@@ -473,14 +476,14 @@ namespace VideoOtomasyon
         private void begen_clcked(object sender, EventArgs e)
         {
             VideoİzleyeniBelirle();
-            SQLQuery2Parametreli("Select Begenme from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID=Videolar.ID inner join Oturum on Oturum.id=Görüntülenmeler.İzleyenID  WHERE VideoAdı =@v and Ad=@o ", "@v", "@o", list_Videolar.Text, lbl_Kullanici.Text);
+            paramatrelidata("Select Begenme from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID=Videolar.ID inner join Oturum on Oturum.id=Görüntülenmeler.İzleyenID  WHERE VideoAdı ='@0' and Ad='@1' ", new[] { list_Videolar.Text, lbl_Kullanici.Text });
             if (rdr.Read())
             {
                 if (rdr[0].ToString() == "False" || rdr[0] == DBNull.Value)
                 {
                     baglanti.Close();
                     // BegenmelerNullKaldır();
-                    SQLQuery3Parametreli("UPDATE Görüntülenmeler  set Begenme='true' from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+                    paramatrelidata("UPDATE Görüntülenmeler  set Begenme='true' from Görüntülenmeler  inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = '@0' and İzlenenenVideoID = '@1' and İzleyenID = '@2'", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
                     baglanti.Close();
 
                     GörüntülenmeGöster();
@@ -489,7 +492,7 @@ namespace VideoOtomasyon
                 {
                     baglanti.Close();
                     // BegenmelerNullKaldır();
-                    SQLQuery3Parametreli("UPDATE Görüntülenmeler  set Begenme='False' from Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+                    paramatrelidata("UPDATE Görüntülenmeler  set Begenme='False' from Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = '@0' and İzlenenenVideoID = '@1' and İzleyenID = '@2'", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
                     baglanti.Close();
 
                     GörüntülenmeGöster();
@@ -535,43 +538,46 @@ namespace VideoOtomasyon
 
         private void AnasayfaListeArama_TextChanged(object sender, EventArgs e)
         {
+          
             list_Videolar.Items.Clear();
 
-            komut = new SqlCommand("AnasayfaListeYenile", baglanti);
+            komut = new NpgsqlCommand("SELECT  AnasayfaListeYenile(@VAd)", baglanti);
             baglanti.Open();
-            komut.CommandType = CommandType.StoredProcedure;
-            komut.Parameters.Add("VideoAdı", SqlDbType.NVarChar, 100).Value = "%" + AnasayfaListeAramaTextBox.Text + "%";
+           
+            komut.Parameters.Add("@VAd", NpgsqlTypes.NpgsqlDbType.Text, 100).Value = "%" + AnasayfaListeAramaTextBox.Text + "%";
             rdr = komut.ExecuteReader();
             //Stored Procedure Kullanılarak yapılmıştır.
             while (rdr.Read())
             {
-                list_Videolar.Items.Add(rdr["VideoAdı"]);
+                list_Videolar.Items.Add(rdr["AnasayfaListeYenile"]);
 
             }
             baglanti.Close();
-
+        
         }
 
 
         private void ProfilListeAramaTextBox_TextChanged(object sender, EventArgs e)
         {
+            /*
             list_Videolarim.Items.Clear();
             //Stored Procedure Kullanılarak yapılmıştır.
-            komut = new SqlCommand("ProfilListeYenile", baglanti);
-            baglanti.Open();
-            komut.CommandType = CommandType.StoredProcedure;
-            komut.Parameters.Add("VideoAdı", SqlDbType.NVarChar, 100).Value = "%" + ProfilListeAramaTextBox.Text + "%";
-            rdr = komut.ExecuteReader();
-            while (rdr.Read())
-            {
-                if (rdr["Ad"].ToString() == lbl_Kullanici.Text)
-                {
-                    list_Videolarim.Items.Add(rdr["VideoAdı"]);
+            komut = new NpgsqlCommand("Call \"ProfilListeYenile\" (:_kk,:_otrm)", baglanti);
 
+            komut.Parameters.Add("_otrm", NpgsqlTypes.NpgsqlDbType.Text).NpgsqlValue = lbl_Kullanici.Text;
+            komut.Parameters.Add("_kk", NpgsqlTypes.NpgsqlDbType.Text).NpgsqlValue = "%"+ProfilListeAramaTextBox.Text+"%";
+            komut.CommandType = CommandType.Text;
+            baglanti.Open();
+            rdr = komut.ExecuteReader();
+                while (rdr.Read())
+                {
+                list_Videolarim.Items.Add(rdr["_otrm"]);
                 }
-            }
-            baglanti.Close();
+                baglanti.Close();
+            */
+            
         }
+
 
 
         /// <fonksiyonlar>
@@ -581,7 +587,7 @@ namespace VideoOtomasyon
 
         private void VideoİzleyeniBelirle()
         {
-            SQLQuery1Parametreli("select id from Oturum  where Ad=@k", "@k", lbl_Kullanici.Text);
+            paramatrelidata("select id from Oturum  where Ad=@0", new[] { lbl_Kullanici.Text });
             if (rdr.Read())
             {
                 izleyenkisiid = rdr["id"].ToString();
@@ -589,7 +595,7 @@ namespace VideoOtomasyon
             }
             baglanti.Close();
 
-            SQLQuery1Parametreli("select id,Videolar.ID,SahibiID,Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id where VideoAdı=@videoadi", "@videoadi", list_Videolar.Text);
+            paramatrelidata("select Oturum.id,Videolar.ID,SahibiID,Ad from Oturum inner join Videolar on Videolar.SahibiID=Oturum.id where VideoAdı=@0", new[] { list_Videolar.Text });
             if (rdr.Read())
             {
                 VideonunID = rdr["ID"].ToString();
@@ -604,21 +610,21 @@ namespace VideoOtomasyon
             //baglanti.Close();
 
             //görüntülenmeyi labele yazar
-            SQLQuery1Parametreli(" Select COUNT(*) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = @v", "@v", list_Videolar.Text);
+            paramatrelidata(" Select COUNT(*) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = '@0'",new[] { list_Videolar.Text });
             if (rdr.Read()) lbl_GrntlmeSayisi.Text = rdr[0].ToString();
             baglanti.Close();
 
             //begenenler sayisilabele
-            SQLQuery1Parametreli(" Select COUNT(Begenme) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = @v and Begenme = 'True' ", "@v", list_Videolar.Text);
+            paramatrelidata(" Select COUNT(Begenme) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = '@0' and Begenme = 'True' ", new[] { list_Videolar.Text });
             if (rdr.Read()) lbl_Begen.Text = rdr[0].ToString();
             baglanti.Close();
             //begenmeyenlerin sayisi labele
-            SQLQuery1Parametreli(" Select COUNT(Begenmeme) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = @v and Begenmeme = 'True' ", "@v", list_Videolar.Text);
+            paramatrelidata(" Select COUNT(Begenmeme) from Görüntülenmeler inner join Videolar on Videolar.ID = Görüntülenmeler.İzlenenenVideoID where VideoAdı = '@0' and Begenmeme = 'True' ", new[] { list_Videolar.Text });
             if (rdr.Read()) lbl_begenme.Text = rdr[0].ToString();
             baglanti.Close();
             VideoİzleyeniBelirle();
             //begenme buton göster
-            SQLQuery3Parametreli("Select Begenme from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+            paramatrelidata("Select Begenme from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @0 and İzlenenenVideoID = @1 and İzleyenID = @2", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
             if (rdr.Read())
             {
                 if (rdr[0].ToString() == "True")
@@ -634,7 +640,7 @@ namespace VideoOtomasyon
             }
             //begenmeme buton göster
             baglanti.Close();
-            SQLQuery3Parametreli("Select Begenmeme from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @i and İzlenenenVideoID = @v and İzleyenID = @k", "@i", "@v", "@k", VideoSahibiID, VideonunID, izleyenkisiid);
+            paramatrelidata("Select Begenmeme from  Görüntülenmeler inner join Videolar on Görüntülenmeler.İzlenenenVideoID = Videolar.ID inner join Oturum on Oturum.id = Görüntülenmeler.İzleyenID where İzlenenenkisiID = @0 and İzlenenenVideoID = @1 and İzleyenID = @2", new[] { VideoSahibiID, VideonunID, izleyenkisiid });
             if (rdr.Read())
             {
                 if (rdr[0].ToString() == "True")
@@ -650,12 +656,12 @@ namespace VideoOtomasyon
             }
             baglanti.Close();
             //kanal abone sayısını güncelleme
-            SQLQuery1Parametreli("select Count(*) from Abonelikler inner join Videolar on Videolar.ID=Abonelikler.OlunanVideoID where SahibiID = @v", "@v", VideoSahibiID);
+            paramatrelidata("select Count(*) from Abonelikler inner join Videolar on Videolar.ID=Abonelikler.OlunanVideoID where SahibiID = @0", new[] { VideoSahibiID });
             if (rdr.Read()) Abone_sayisi.Text = rdr[0].ToString();
             baglanti.Close();
 
             //Videoya değil kanala abone olma butonunu 
-            SQLQuery2Parametreli("Select COUNT(*) Abonelikler from Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID inner join Oturum on Abonelikler.KimAboneID=Oturum.id where KimeAboneID = @kim  and KimAboneID =@kime", "@kim", "@kime", VideoSahibiID, izleyenkisiid);
+            paramatrelidata("Select COUNT(*) Abonelikler from Abonelikler inner join Videolar on Abonelikler.OlunanVideoID=Videolar.ID inner join Oturum on Abonelikler.KimAboneID=Oturum.id where KimeAboneID = @0  and KimAboneID =@1", new[] { VideoSahibiID, izleyenkisiid });
             if (rdr.Read())
             {
                 if (rdr[0].ToString() == "0") { Abone_ol_Btn.Text = "Abone ol"; }
@@ -670,7 +676,7 @@ namespace VideoOtomasyon
         {
             pnl_Yorum.Controls.Clear();
             labelarasi = 0;
-            SQLQuery1Parametreli("Select VideoID,Videolar.ID,AD,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID  where VideoAdı =@videonunismi", "@videonunismi", list_Videolar.Text);
+            paramatrelidata("Select VideoID,Videolar.ID,AD,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID  where VideoAdı =@0", new[] { list_Videolar.Text });
             while (rdr.Read())
             {
                 if (rdr["VideoID"].ToString() == rdr["ID"].ToString())
@@ -687,44 +693,30 @@ namespace VideoOtomasyon
             baglanti.Close();
         }
 
-        private void SQLQuery1Parametreli(string s, string parametre, string degeri)
+        public void paramatrelidata(string komut1, string[] paramss)
         {
-            komut = new SqlCommand();
-            komut.Parameters.AddWithValue(parametre, degeri);
+            //parametreler sırasıyla @0,@1,@2 olarak devam etmelidir
+            //parametre değerleri ise string dizisi içinde aynı sırayla verilmedilir
+            komut = new NpgsqlCommand(komut1, baglanti);
+            for (int i = 0; i < paramss.Length; i++)
+            {
+                foreach(var a in paramss[i])
+                    if(paramss[i].All(c => char.IsDigit(c)))
+                        komut.Parameters.AddWithValue("@" + i, Convert.ToInt32(paramss[i]));
+                    else
+                        komut.Parameters.AddWithValue("@" + i, paramss[i]);
+            }
             baglanti.Open();
-            komut.Connection = baglanti;
-            komut.CommandText = s;
             rdr = komut.ExecuteReader();
-
         }
 
-        private void SQLQuery2Parametreli(string s, string parametre1, string parametre2, string degeri1, string degeri2)
-        {
-            komut = new SqlCommand();
-            komut.Parameters.AddWithValue(parametre1, degeri1);
-            komut.Parameters.AddWithValue(parametre2, degeri2);
-            baglanti.Open();
-            komut.Connection = baglanti;
-            komut.CommandText = s;
-            rdr = komut.ExecuteReader();
 
-        }
 
-        private void SQLQuery3Parametreli(string s, string parametre1, string parametre2, string parametre3, string degeri1, string degeri2, string degeri3)
-        {
-            komut = new SqlCommand();
-            komut.Parameters.AddWithValue(parametre1, degeri1);
-            komut.Parameters.AddWithValue(parametre2, degeri2);
-            komut.Parameters.AddWithValue(parametre3, degeri3);
-            baglanti.Open();
-            komut.Connection = baglanti;
-            komut.CommandText = s;
-            rdr = komut.ExecuteReader();
 
-        }
+
         public void SQLQuery(string s)
         {
-            komut = new SqlCommand();
+            komut = new NpgsqlCommand();
             baglanti.Open();
             komut.Connection = baglanti;
             komut.CommandText = s;
@@ -737,19 +729,7 @@ namespace VideoOtomasyon
 
         }
 
-        private void SQLQuery5Parametreli(string s, string[] parametreler, string[] degerler)
-        {
-            komut = new SqlCommand();
-            baglanti.Open();
-            komut.Connection = baglanti;
-            komut.CommandText = s;
-            komut.Parameters.AddWithValue(parametreler[0], degerler[0]);
-            komut.Parameters.AddWithValue(parametreler[1], degerler[1]);
-            komut.Parameters.AddWithValue(parametreler[2], degerler[2]);
-            komut.Parameters.AddWithValue(parametreler[3], degerler[3]);
-            komut.Parameters.AddWithValue(parametreler[4], degerler[4]);
-            rdr = komut.ExecuteReader();
-        }
+       
 
 
 
@@ -757,7 +737,7 @@ namespace VideoOtomasyon
         {
             list_Videolar.Items.Clear();
             list_Videolarim.Items.Clear();
-            SQLQuery("Select * From Videolar where PaylasildiDurum=1");
+            SQLQuery("Select * From Videolar where PaylasildiDurum=True");
             while (rdr.Read())
             {
                 list_Videolar.Items.Add(rdr["VideoAdı"]);

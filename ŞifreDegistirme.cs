@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
@@ -8,10 +9,10 @@ namespace VideoOtomasyon
     public partial class ŞifreDegistirme : Form
     {
 
-        string connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=OguzDTO;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        SqlConnection baglanti = new SqlConnection();
-        SqlCommand komut = new SqlCommand();
-        SqlDataReader rdr;
+        string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
+        NpgsqlConnection baglanti = new NpgsqlConnection();
+        NpgsqlCommand komut = new NpgsqlCommand();
+        NpgsqlDataReader rdr;
         DataSet ds;
 
         public ŞifreDegistirme()
@@ -120,7 +121,7 @@ namespace VideoOtomasyon
         private void SQLQuery2Parametreli(string s, string p1, string p2, string d1, string d2)
         {
 
-            komut = new SqlCommand();
+            komut = new NpgsqlCommand();
             komut.Parameters.AddWithValue(p1, d1);
             komut.Parameters.AddWithValue(p2, d2);
             baglanti.Open();
@@ -135,7 +136,7 @@ namespace VideoOtomasyon
 
         private void SQLQuery(string s)
         {
-            komut = new SqlCommand();
+            komut = new NpgsqlCommand();
             baglanti.Open();
             komut.Connection = baglanti;
             komut.CommandText = s;

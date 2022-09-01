@@ -11,18 +11,18 @@ namespace VideoOtomasyon
 {
     internal class Fonksiyonlar
     {
-        static public string connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=OguzDTO;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        static SqlConnection con = new SqlConnection();
-        static SqlCommand cmd = new SqlCommand();
-        static SqlDataAdapter da;
+        static public string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
+        static NpgsqlConnection con = new NpgsqlConnection();
+        static NpgsqlCommand cmd = new NpgsqlCommand();
+        static NpgsqlDataAdapter da;
         static DataSet ds;
-        static SqlDataReader rdr;
+        static NpgsqlDataReader rdr;
 
         static public DataGridView TümGridiDoldur(DataGridView grit, string Sorgunuz)
         {
 
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter(Sorgunuz, con);
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter(Sorgunuz, con);
             ds = new DataSet();
             con.Open();
             da.Fill(ds, Sorgunuz);
@@ -35,8 +35,8 @@ namespace VideoOtomasyon
         static public DataTable DatasetimiziDoldur( string Sorgunuz)
         {
 
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter(Sorgunuz, con);
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter(Sorgunuz, con);
             ds = new DataSet();
             con.Open();
             da.Fill(ds, Sorgunuz);       
@@ -60,8 +60,8 @@ namespace VideoOtomasyon
         static public DataGridView DataGridRowGüncelle(DataGridView grit, string Sorgu, string güncellenecekSorgu, string Gparam)
         {
             grit.Columns.Clear();
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter(Sorgu, con);
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter(Sorgu, con);
             ds = new DataSet();
             con.Open();
             da.Fill(ds, Sorgu);
@@ -72,7 +72,7 @@ namespace VideoOtomasyon
             {
                 a[i] = grit.Rows[i].Cells[0].Value.ToString();
 
-                cmd = new SqlCommand();
+                cmd = new NpgsqlCommand();
                 cmd.Parameters.AddWithValue(Gparam, a[i]);
                 con.Open();
                 cmd.Connection = con;
@@ -94,8 +94,8 @@ namespace VideoOtomasyon
         static public DataGridView DataGridRowGüncelleVeSeç(DataGridView grit, string Sorgu, string güncellenecekSorgu, string Gparam, int güncellenecekSütün)
         {
             grit.Columns.Clear();
-            con = new SqlConnection(connectionString);
-            da = new SqlDataAdapter(Sorgu, con);
+            con = new NpgsqlConnection(connectionString);
+            da = new NpgsqlDataAdapter(Sorgu, con);
             ds = new DataSet();
             con.Open();
             da.Fill(ds, Sorgu);
@@ -106,7 +106,7 @@ namespace VideoOtomasyon
             {
                 a[i] = grit.Rows[i].Cells[güncellenecekSütün].Value.ToString();
 
-                cmd = new SqlCommand();
+                cmd = new NpgsqlCommand();
                 cmd.Parameters.AddWithValue(Gparam, a[i]);
                 con.Open();
                 cmd.Connection = con;
@@ -133,7 +133,7 @@ namespace VideoOtomasyon
             {
                 a[i] = grit.Rows[i].Cells[güncellenecekSütün].Value.ToString();
 
-                cmd = new SqlCommand();
+                cmd = new NpgsqlCommand();
                 cmd.Parameters.AddWithValue(Gparam, a[i]);
                 con.Open();
                 cmd.Connection = con;
@@ -195,8 +195,8 @@ namespace VideoOtomasyon
         public static string SayisiniGetir(string SyKomut, string SyParam, string SyKosul)
         {
             string görüntülenme = null;
-            cmd = new SqlCommand();
-            con = new SqlConnection(connectionString);
+            cmd = new NpgsqlCommand();
+            con = new NpgsqlConnection(connectionString);
             cmd.Connection = con;
             cmd.Parameters.AddWithValue(SyParam, SyKosul);
             con.Open();
@@ -215,8 +215,8 @@ namespace VideoOtomasyon
 
         public static bool YetkiKontrol()
         {
-            cmd = new SqlCommand();
-            con = new SqlConnection(connectionString);
+            cmd = new NpgsqlCommand();
+            con = new NpgsqlConnection(connectionString);
             con.Open();
             cmd.Connection = con;
             cmd.CommandText = "Select AdminYetkisi from Oturum where Ad='" + VideoOtomasyon.KullanıcıADıSession + "'";
