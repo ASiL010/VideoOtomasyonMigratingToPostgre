@@ -10,12 +10,7 @@ namespace VideoOtomasyon
 
     public partial class AdminPaneli : Form
     {
-        static public string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
-        static NpgsqlConnection con = new NpgsqlConnection();
-        static NpgsqlCommand cmd = new NpgsqlCommand();
-        static NpgsqlDataAdapter da;
-        static DataSet ds;
-        static NpgsqlDataReader rdr;
+       
 
 
         public AdminPaneli()
@@ -74,12 +69,12 @@ namespace VideoOtomasyon
 
             if (Fonksiyonlar.SifrelemeKuralları(AdminOturumYeniSifre.Text))
             {
-                SQLQuery2Parametreli("Update Oturum Set Sifre=@s where Ad=@a", "@s", "@a", Fonksiyonlar.md5ilesifrele(AdminOturumYeniSifre.Text), AdminOturumAd.Text);
+                Fonksiyonlar.paramatrelidata("Update Oturum Set Sifre=@0 where Ad=@1", new[] { Fonksiyonlar.md5ilesifrele(AdminOturumYeniSifre.Text), AdminOturumAd.Text });
                 MessageBox.Show("Şifre Başarı ile Değiştirilmiştir");
                 AdminOturumYeniSifre.Clear();
                 DataBindingYenileOturum();
             }
-            con.Close();
+            Fonksiyonlar.con.Close();
 
         }
 
@@ -95,46 +90,22 @@ namespace VideoOtomasyon
 
         private void AdminPaneli_Load(object sender, EventArgs e)
         {
-            con.ConnectionString = connectionString;
+            Fonksiyonlar.con.ConnectionString = Fonksiyonlar.connectionString;
             AdminOturumYetkilendirme.SelectedIndex = 0;
         }
 
 
         private void SQLQuery(string s)
         {
-            cmd = new NpgsqlCommand();
-            con.Open();
-            cmd.Connection = con;
-            cmd.CommandText = s;
-            rdr = cmd.ExecuteReader();
+            Fonksiyonlar.cmd = new NpgsqlCommand();
+            Fonksiyonlar.con.Open();
+            Fonksiyonlar.cmd.Connection = Fonksiyonlar.con;
+            Fonksiyonlar.cmd.CommandText = s;
+            Fonksiyonlar.rdr = Fonksiyonlar.cmd.ExecuteReader();
 
         }
 
-        private void SQLQuery2Parametreli(string s, string p1, string p2, string d1, string d2)
-        {
-
-            cmd = new NpgsqlCommand();
-            cmd.Parameters.AddWithValue(p1, d1);
-            cmd.Parameters.AddWithValue(p2, d2);
-            con.Open();
-            cmd.Connection = con;
-            cmd.CommandText = s;
-            rdr = cmd.ExecuteReader();
-
-        }
-
-        private void SQLQuery1Parametreli(string s, string p1, string d1)
-        {
-
-            cmd = new NpgsqlCommand();
-            cmd.Parameters.AddWithValue(p1, d1);
-            con.Open();
-            cmd.Connection = con;
-            cmd.CommandText = s;
-            rdr = cmd.ExecuteReader();
-
-        }
-
+       
 
 
         private void DataBindingYenileOturum()
@@ -144,14 +115,14 @@ namespace VideoOtomasyon
             AdminOturumSifre.DataBindings.Clear();
             AdminOturumYetki.DataBindings.Clear();
 
-            con = new NpgsqlConnection(connectionString);
-            da = new NpgsqlDataAdapter("Select * from Oturum", connectionString);
-            ds = new DataSet();
-            con.Open();
-            da.Fill(ds);
-            con.Close();
+            Fonksiyonlar.con = new NpgsqlConnection(Fonksiyonlar.connectionString);
+            Fonksiyonlar.da = new NpgsqlDataAdapter("Select * from Oturum", Fonksiyonlar.connectionString);
+            Fonksiyonlar.ds = new DataSet();
+            Fonksiyonlar.con.Open();
+            Fonksiyonlar.da.Fill(Fonksiyonlar.ds);
+            Fonksiyonlar.con.Close();
 
-            kaynak.DataSource = ds.Tables[0];
+            kaynak.DataSource = Fonksiyonlar.ds.Tables[0];
             kaynakGezgini.BindingSource = kaynak;
 
             label1.DataBindings.Add(new Binding("Text", kaynak, "id"));
@@ -163,17 +134,17 @@ namespace VideoOtomasyon
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            SQLQuery1Parametreli("select Ad from Oturum WHERE Ad = @Adi", "@Adi", AdminOturumAd.Text);
+            Fonksiyonlar.paramatrelidata("select Ad from Oturum WHERE Ad = @0",new[] { AdminOturumAd.Text });
 
-            if (rdr.Read())
+            if (Fonksiyonlar.rdr.Read())
             {
                 MessageBox.Show("Bu kullanıcı adı zaten var...");
             }
             else
             {
-                con.Close();
-                SQLQuery2Parametreli("Update Oturum Set Ad=@K where id=@a", "@a", "@K", label1.Text, AdminOturumAd.Text);
-                con.Close();
+                Fonksiyonlar.con.Close();
+                Fonksiyonlar.paramatrelidata("Update Oturum Set Ad=@K where id=@0", new[] { label1.Text, AdminOturumAd.Text });
+                Fonksiyonlar.con.Close();
                 AdminOturumAd.Clear();
                 DataBindingYenileOturum();
                 MessageBox.Show("Kullanıcı Adı Başarıyla değiştirildi");
@@ -186,16 +157,16 @@ namespace VideoOtomasyon
             {
                 if (AdminOturumYetkilendirme.SelectedIndex == 1)
                 {
-                    SQLQuery1Parametreli("Update Oturum Set AdminYetkisi='True' where id=@a", "@a", label1.Text);
-                    con.Close();
+                    Fonksiyonlar.paramatrelidata("Update Oturum Set AdminYetkisi=True where id=@0",new[] { label1.Text });
+                    Fonksiyonlar.con.Close();
                     MessageBox.Show("Admin yetkisi verildi");
                     AdminOturumYetki.Clear();
                     DataBindingYenileOturum();
                 }
                 else if (AdminOturumYetkilendirme.SelectedIndex == 2)
                 {
-                    SQLQuery1Parametreli("Update Oturum Set AdminYetkisi='False' where id=@a", "@a", label1.Text);
-                    con.Close();
+                    Fonksiyonlar.paramatrelidata("Update Oturum Set AdminYetkisi='False' where id=@0", new[] { label1.Text });
+                    Fonksiyonlar.con.Close();
                     MessageBox.Show("Admin yetkisi Elinden Alındı");
                     AdminOturumYetki.Clear();
 
@@ -300,15 +271,15 @@ namespace VideoOtomasyon
             YorumunTarihi.DataBindings.Clear();
             YorumIDsi.DataBindings.Clear();
             VideoIDsi.DataBindings.Clear();
-       
-            con = new NpgsqlConnection(connectionString);
-            da = new NpgsqlDataAdapter("Select VideoID,Yorumlar.ID,Ad,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID where VideoAdı='" + AdminPanelYorumluVideolarListesi.Text + "'", con);
-            ds = new DataSet();
-            con.Open();
-            da.Fill(ds);
-            con.Close();
 
-            kaynakYorum.DataSource = ds.Tables[0];
+            Fonksiyonlar.con = new NpgsqlConnection(Fonksiyonlar.connectionString);
+            Fonksiyonlar.da = new NpgsqlDataAdapter("Select VideoID,Yorumlar.ID,Ad,YorumIcerigi,YorumTarihi from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID inner join Oturum on Oturum.id=Yorumlar.YorumSahipID where VideoAdı='" + AdminPanelYorumluVideolarListesi.Text + "'", Fonksiyonlar.con);
+            Fonksiyonlar.ds = new DataSet();
+            Fonksiyonlar.con.Open();
+            Fonksiyonlar.da.Fill(Fonksiyonlar.ds);
+            Fonksiyonlar.con.Close();
+
+            kaynakYorum.DataSource = Fonksiyonlar.ds.Tables[0];
             YorumNavigator.BindingSource = kaynakYorum;
 
             Yorumİçeriği.DataBindings.Add(new Binding("Text", kaynakYorum, "YorumIcerigi"));
@@ -325,17 +296,17 @@ namespace VideoOtomasyon
         {
             if (AdminPanelYorumluVideolarListesi.SelectedIndex > -1)
             {
-                SQLQuery1Parametreli("select VideoAdı from Videolar where VideoAdı=@v", "@v", VideoAdıDeğiştir.Text);
-                if (rdr.Read())
+                Fonksiyonlar.paramatrelidata("select VideoAdı from Videolar where VideoAdı=@0", new[] { VideoAdıDeğiştir.Text });
+                if (Fonksiyonlar.rdr.Read())
                 {
                     MessageBox.Show("Sistemde aynı isimli video zaten var...");
-                    con.Close();
+                    Fonksiyonlar.con.Close();
                 }
                 else
                 {
-                    con.Close();
-                    SQLQuery2Parametreli("Update Videolar Set VideoAdı=@a where VideoAdı=@k", "@a", "@k", VideoAdıDeğiştir.Text, AdminPanelYorumluVideolarListesi.Text);
-                    con.Close();
+                    Fonksiyonlar.con.Close();
+                    Fonksiyonlar.paramatrelidata("Update Videolar Set VideoAdı=@a where VideoAdı=@0",new[] { VideoAdıDeğiştir.Text, AdminPanelYorumluVideolarListesi.Text });
+                    Fonksiyonlar.con.Close();
                     MessageBox.Show("Videonun İsmi Başarı ile Değiştirildi");
                     VideoAdıDeğiştir.Clear();
                     DataBindingYenileYorumlar();
@@ -349,19 +320,19 @@ namespace VideoOtomasyon
         private void AdminVideoListeYenile()
         {
             SQLQuery("Select distinct VideoAdı from Videolar inner join Yorumlar on Videolar.ID=Yorumlar.VideoID");
-            while (rdr.Read())
+            while (Fonksiyonlar.rdr.Read())
             {
-                AdminPanelYorumluVideolarListesi.Items.Add(rdr[0].ToString());
+                AdminPanelYorumluVideolarListesi.Items.Add(Fonksiyonlar.rdr[0].ToString());
 
             }
-            con.Close();
+            Fonksiyonlar.con.Close();
 
         }
 
         private void button4_Click_1(object sender, EventArgs e)
         {
-            SQLQuery2Parametreli("Update Yorumlar Set YorumIcerigi=@a from Yorumlar inner join Videolar on Videolar.ID=Yorumlar.VideoID where Yorumlar.ID=@k", "@a", "@k", Yorumİçeriği.Text, YorumIDsi.Text);
-            con.Close();
+            Fonksiyonlar.paramatrelidata("Update Yorumlar Set YorumIcerigi=@0 from  Videolar where Videolar.ID=Yorumlar.VideoID and Yorumlar.ID=@1", new[] { Yorumİçeriği.Text, YorumIDsi.Text });
+            Fonksiyonlar.con.Close();
             MessageBox.Show("Videoya Yapılan Yorum Başarı ile Değiştirildi");
             VideoAdıDeğiştir.Clear();
             DataBindingYenileYorumlar();
@@ -371,8 +342,8 @@ namespace VideoOtomasyon
 
         private void button6_Click(object sender, EventArgs e)
         {
-            SQLQuery1Parametreli("Delete From Yorumlar  where Yorumlar.ID=@k", "@k", YorumIDsi.Text);
-            con.Close();
+            Fonksiyonlar.paramatrelidata("Delete From Yorumlar  where Yorumlar.ID=@0", new[] { YorumIDsi.Text });
+            Fonksiyonlar.con.Close();
             MessageBox.Show("Video Başarı ile Silindi");
             VideoAdıDeğiştir.Clear();
             DataBindingYenileYorumlar();
@@ -430,20 +401,20 @@ namespace VideoOtomasyon
             pnl_AdminIstatistik.Visible = true;
             string a = null, b = null, c = null, d = null, f = null;
             SQLQuery("Select COUNT(id) from Oturum");
-            if (rdr.Read()) a = rdr[0].ToString();
-            con.Close();
+            if (Fonksiyonlar.rdr.Read()) a = Fonksiyonlar.rdr[0].ToString();
+            Fonksiyonlar.con.Close();
             SQLQuery("Select COUNT(ID) from Videolar");
-            if (rdr.Read()) b = rdr[0].ToString();
-            con.Close();
+            if (Fonksiyonlar.rdr.Read()) b = Fonksiyonlar.rdr[0].ToString();
+            Fonksiyonlar.con.Close();
             SQLQuery("Select COUNT(ID) from Yorumlar");
-            if (rdr.Read()) c = rdr[0].ToString();
-            con.Close();
+            if (Fonksiyonlar.rdr.Read()) c = Fonksiyonlar.rdr[0].ToString();
+            Fonksiyonlar.con.Close();
             SQLQuery("Select COUNT(ID) from Görüntülenmeler");
-            if (rdr.Read()) d = rdr[0].ToString();
-            con.Close();
+            if (Fonksiyonlar.rdr.Read()) d = Fonksiyonlar.rdr[0].ToString();
+            Fonksiyonlar.con.Close();
             SQLQuery("Select COUNT(ID) from Abonelikler");
-            if (rdr.Read()) f = rdr[0].ToString();
-            con.Close();
+            if (Fonksiyonlar.rdr.Read()) f = Fonksiyonlar.rdr[0].ToString();
+            Fonksiyonlar.con.Close();
             UygulamaChart.Series["Toplam"].Points.Add(double.Parse(a));
             UygulamaChart.Series["Toplam"].Points.Add(double.Parse(b));
             UygulamaChart.Series["Toplam"].Points.Add(double.Parse(c));
@@ -462,12 +433,12 @@ namespace VideoOtomasyon
         {
             AdminPanelYorumluVideolarListesi.Items.Clear();
             SQLQuery("Select distinct VideoAdı from Videolar inner join Yorumlar on Videolar.ID=Yorumlar.VideoID where VideoAdı Like'%" + YorumlardaAra.Text + "%'");
-            while (rdr.Read())
+            while (Fonksiyonlar.rdr.Read())
             {
-                AdminPanelYorumluVideolarListesi.Items.Add(rdr[0].ToString());
+                AdminPanelYorumluVideolarListesi.Items.Add(Fonksiyonlar.rdr[0].ToString());
 
             }
-            con.Close();
+            Fonksiyonlar.con.Close();
 
             AdminPanelYorumluVideolarListesi.SelectedIndex = 0;
         }

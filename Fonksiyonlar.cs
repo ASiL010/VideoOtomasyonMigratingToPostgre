@@ -14,11 +14,12 @@ namespace VideoOtomasyon
     internal class Fonksiyonlar
     {
         static public string connectionString = "Server=localhost;Port=5432;Database=VideoOtomasyon;User Id=postgres;Password=123;";
-        static NpgsqlConnection con = new NpgsqlConnection();
-        static NpgsqlCommand cmd = new NpgsqlCommand();
-        static NpgsqlDataAdapter da;
-        static DataSet ds;
-        static NpgsqlDataReader rdr;
+        static public NpgsqlConnection con = new NpgsqlConnection(connectionString);
+        static public NpgsqlCommand cmd = new NpgsqlCommand();
+        static public NpgsqlDataAdapter da;
+        static public DataSet ds;
+        static public NpgsqlDataReader rdr;
+        
 
         static public DataGridView TümGridiDoldur(DataGridView grit, string Sorgunuz)
         {
@@ -73,12 +74,13 @@ namespace VideoOtomasyon
             for (int i = 0; i < grit.Rows.Count - 1; i++)
             {
                 a[i] = grit.Rows[i].Cells[0].Value.ToString();
-
+              
                 cmd = new NpgsqlCommand();
-                cmd.Parameters.AddWithValue(Gparam, Convert.ToInt32(a[i]));
-                con.Open();
                 cmd.Connection = con;
                 cmd.CommandText = güncellenecekSorgu;
+                cmd.Parameters.AddWithValue(Gparam, Convert.ToInt32(a[i]));
+                con.Open();
+                
                 rdr = cmd.ExecuteReader();
                 if (rdr.Read()) { a[i] = rdr[0].ToString(); }
                 con.Close();
@@ -234,6 +236,24 @@ namespace VideoOtomasyon
 
             return false;
         }
+
+        public static void paramatrelidata(string komut1, string[] paramss)
+        {
+            //parametreler sırasıyla @0,@1,@2 olarak devam etmelidir
+            //parametre değerleri ise string dizisi içinde aynı sırayla verilmedilir
+            cmd = new NpgsqlCommand(komut1, con);
+            for (int i = 0; i < paramss.Length; i++)
+            {
+                foreach (var a in paramss[i])
+                    if (paramss[i].All(c => char.IsDigit(c)))
+                        cmd.Parameters.AddWithValue("@" + i, Convert.ToInt32(paramss[i]));
+                    else
+                        cmd.Parameters.AddWithValue("@" + i, paramss[i]);
+            }
+            con.Open();
+            rdr = cmd.ExecuteReader();
+        }
+
 
     }
 
